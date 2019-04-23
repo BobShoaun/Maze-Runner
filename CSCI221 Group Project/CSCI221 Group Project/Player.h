@@ -42,7 +42,7 @@ class Player : public GameObject {
 
 	void onUpdate (float deltaTime) {
 
-		if (penaltyTimer < 0.5f) {
+		if (penaltyTimer < 1.0f) {
 			speed = 15;
 			penaltyTimer += deltaTime;
 		}

@@ -2,9 +2,7 @@
 #include <vector>
 #include "Vector2.h"
 
-//int static const screenWidth = 160, screenHeight = 100;
 int static const screenWidth = 120, screenHeight = 80;
-//int static const screenWidth = 10, screenHeight = 10;
 
 class GameObject {
 

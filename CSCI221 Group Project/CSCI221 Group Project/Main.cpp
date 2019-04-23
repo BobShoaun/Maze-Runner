@@ -40,7 +40,7 @@ int main () {
 				//game.addGameObject (new LaunchPad (Vector2 (x * 8, y * 8), Vector2 (8, 8), FG_YELLOW, true));
 				
 				game.addGameObject (new Player (Vector2 (5 + x * 8, 3 + y * 8), Vector2 (3, 3), FG_BLUE)); // runner
-				game.addGameObject (new Player (Vector2 (x * 8, 3 + y * 8), Vector2 (3, 3), FG_RED)); // chaser
+				game.addGameObject (new Player (Vector2 (1 + x * 8, 3 + y * 8), Vector2 (3, 3), FG_RED)); // chaser
 			}
 		
 		}
