@@ -1,127 +1,51 @@
-#include <iostream>
-#include <conio.h>
-#include <windows.h>
-#include <array>
-#include <stdio.h>
-#include <vector>
-#include <string>
-#include <cstring>
-#include <fstream>
+#pragma once
 #include "Vector2.h"
+#include "GameObject.h"
+#include "Player.h"
+#include "Game.h"
+#include "LaunchPad.h"
+#include "Map.h"
 
-using namespace std;
+int main () {
 
-const int screenHeight = 25, screenWidth = 100;
+	Game game;
+	game.ConstructConsole (screenWidth, screenHeight, 8, 8);
 
-array<array<char, screenWidth>, screenHeight> previousScreen;
-array<array<char, screenWidth>, screenHeight> currentScreen;
+	char map [screenWidth / 8] [screenHeight / 8] { {'0','0','0','0','0','0','0','0','0','0'},
+													{'0','0','0','0',' ',' ','0','0','S','0'},
+													{'0','0',' ',' ',' ',' ',' ','0',' ','0'},
+													{'0',' ',' ','0','0','0',' ','0',' ','0'},
+													{'0',' ',' ','0','0',' ',' ','0',' ','0'},
+													{'0',' ','0','0',' ',' ',' ','0',' ','0'},
+													{'0',' ',' ','0',' ',' ','0',' ',' ','0'},
+													{'0','0',' ','0',' ','0',' ',' ','0','0'},
+													{'0',' ',' ','0',' ','0',' ','0','0','0'},
+													{'0',' ','0','0',' ','0',' ',' ','0','0'},
+													{'0',' ',' ','0',' ',' ','0',' ',' ','0'},
+													{'0','0',' ','0','0',' ',' ','0',' ','0'},
+													{'0','0',' ','0','0','0',' ',' ',' ','0'},
+													{'0','F',' ','0','0','0','0',' ','0','0'},
+													{'0','0','0','0','0','0','0','0','0','0'}, };
+																													
 
-/* toggles the underscore in the console to be visible or invisible depending on the boolean passed in
-function is not original and copy pasted from the internet, as it is not part of the logic of the program */
-void toggleConsoleCursor (bool isVisible) {
-	HANDLE out = GetStdHandle (STD_OUTPUT_HANDLE);
-	CONSOLE_CURSOR_INFO cursorInfo;
-	GetConsoleCursorInfo (out, &cursorInfo);
-	cursorInfo.bVisible = isVisible; // set the cursor visibility
-	SetConsoleCursorInfo (out, &cursorInfo);
-}
+	game.addGameObject (new Map (map));
 
-void draw (vector<vector<char>> obj, Vector2 pos) {
-	
-	//int rows = sizeof obj / sizeof obj [0];
-	//int cols = sizeof obj [0] / sizeof (char);
+	for (int x = 0; x < screenWidth / 8; x++) {
+		for (int y = 0; y < screenHeight / 8; y++) {
+			if (map [x] [y] == 'F') {
 
-	for (int objY = 0, y = pos.y; objY < obj.size (); y++, objY++) {
-		for (int objX = 0, x = pos.x; objX < obj [0].size (); x++, objX++) {
-			currentScreen [y] [x] = (obj) [objY] [objX];
-		}
-	}
-
-}
-
-int main () { 
-
-	ifstream in ("Monster.txt");
-
-	if (!in) { 
-		cout << "Cannot open Monster file.\n";
-		cin.get ();
-		return 1;
-	}
-
-	vector<vector<char>> monster (20, vector<char> (30, 0));
-	//char word [30];
-	//for (int y = 0; y < 20; y++) {
-		//for (int x = 0; x < 30; x++) {
-			//string s;
-			//getline (in, s);
-			//char cstr [s.size () + 1];
-			//strcopy (cstr, s.c_str ());
-			//monster [y] = cstr;
-			//in >> monster [y] [x];
-		//}
-	//}
-	//draw (monster, Vector2 (2, 3));
-
-	in.close ();
-
-
-	HANDLE hConsole = GetStdHandle (STD_OUTPUT_HANDLE);
-	if (!hConsole)
-		return 0;
-	CONSOLE_SCREEN_BUFFER_INFO csbi = { 0 };
-	GetConsoleScreenBufferInfo (hConsole, &csbi);
-	COORD coordCur = csbi.dwCursorPosition;
-
-	toggleConsoleCursor (false);
-
-	for (int height = 0; height < screenHeight; height++)
-		for (int width = 0; width < screenWidth; width++)
-			previousScreen [height] [width] = currentScreen [height] [width] = ' ';
-
-	Vector2 pos (0, 0);
-
-	vector<vector<char>> defaultPose = { { ' ', 'O', ' ' },
-								 { '/', '|', 92 },
-								 { '/', '`', 92 } };
-
-	while (true) { 
-
-		Sleep (100);
-
-		if (_kbhit ()) {
-			char input = _getch ();
-			if (input == ' ')
-				pos.x++;
-
-		}
-
-		for (int y = 0; y < screenHeight; y++)
-			for (int x = 0; x < screenWidth; x++)
-				currentScreen [y] [x] = ' ';
-
-		draw (defaultPose, pos);
-
-		for (int y = 0; y < screenHeight; y++) {
-			for (int x = 0; x < screenWidth; x++) {
-				if (previousScreen [y] [x] != currentScreen [y] [x]) { 
-					coordCur.X = x;
-					coordCur.Y = y;
-					SetConsoleCursorPosition (hConsole, coordCur);
-					cout << currentScreen [y] [x];
-					previousScreen [y] [x] = currentScreen [y] [x];
-					//currentScreen [y] [x] = ' ';
-				}
+				game.addGameObjectToFront (new LaunchPad (Vector2 (x * 8, y * 8), Vector2 (8, 8), FG_GREEN, false));
 			}
-		}
+			if (map [x] [y] == 'S') {
+				//game.addGameObject (new LaunchPad (Vector2 (x * 8, y * 8), Vector2 (8, 8), FG_YELLOW, true));
+				
+				game.addGameObject (new Player (Vector2 (5 + x * 8, 3 + y * 8), Vector2 (3, 3), FG_BLUE)); // runner
+				game.addGameObject (new Player (Vector2 (x * 8, 3 + y * 8), Vector2 (3, 3), FG_RED)); // chaser
+			}
 		
-
-		// and print any information from the new position
-		//printf ("..."); // old text will be replaced
-
+		}
 	}
 
-	CloseHandle (hConsole);
-	return 0; 
-}
+	game.Start ();
 
+}
