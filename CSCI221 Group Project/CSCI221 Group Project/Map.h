@@ -29,13 +29,13 @@ void Map::onReset () {
 void Map::updateCollisionMatrix () {
 	for (int x = 0; x < screenWidth; x++)
 		for (int y = 0; y < screenHeight; y++)
-			if (map [x / tileSize] [y / tileSize] == '0')
+			if (map [x / tileSize] [y / tileSize] == 'X' || map [x / tileSize] [y / tileSize] == 'x')
 				collisionMatrix [x] [y] = id;
 }
 
 void Map::onUpdate (float deltaTime) {
 	for (int x = 0; x < screenWidth; x++)
 		for (int y = 0; y < screenHeight; y++)
-			if (map [x / tileSize] [y / tileSize] == '0')
+			if (map [x / tileSize] [y / tileSize] == 'X' || map [x / tileSize] [y / tileSize] == 'x')
 				Game::game->Draw (x, y, PIXEL_SOLID, color);
 }

@@ -41,9 +41,9 @@ void Player::onCollision (GameObject* col) {
 		Game::game->chaserWin = true; //chaser wins
 
 	}
-	LaunchPad* p = dynamic_cast<LaunchPad *> (col);
-	if (p && !p->start) {
-		if (runner) // runner wins
+	Portal* p = dynamic_cast<Portal *> (col);
+	if (p) {
+		if (runner && Game::game->portalVisible) // runner wins
 			Game::game->runnerWin = true;
 		else
 			setPosition (previousPosition);

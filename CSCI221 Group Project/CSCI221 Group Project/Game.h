@@ -1,4 +1,8 @@
 #pragma once
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <stdexcept>
 #include "olcConsoleGameEngine.h"
 #include "GameObject.h"
 
@@ -15,14 +19,19 @@ class Game : public olcConsoleGameEngine {
 	olcSprite * runnerSprite = nullptr;
 
 	std::vector < std::vector < std::vector <char>>> levels;
+	std::vector<int> levelPortalAppearDurations;
 	int currentLevelIndex = 0;
 
 	float headStartTimer = 0.0f;
 	float headStartDuration = 2.5f;
 
-	void loadLevel (std::vector < std::vector <char>> m);
+	float portalAppearTimer = 0.0f;
+	float portalAppearDuration = 10;
+
+	void loadLevel (int levelIndex);
 	void loadNextLevel ();
 
+	void loadLevelMap (std::string path, int portalAppearDuration);
 	void unloadLevel ();
 
 	bool OnUserCreate ();
@@ -40,32 +49,60 @@ class Game : public olcConsoleGameEngine {
 	bool chaserWin = false;
 	bool runnerWin = false;
 	bool chaserReleased = false;
-	
+	bool portalVisible = false;
 };
 
-#include "LaunchPad.h"
+#include "Portal.h"
 #include "Player.h"
 
 Game * Game::game;
 
-void Game::loadLevel (std::vector < std::vector <char>> map) {
+void Game::loadLevelMap (std::string path, int portalAppearDuration) { 
+
+	levelPortalAppearDurations.push_back (portalAppearDuration);
+
+	std::vector<std::vector<char>> mapV;
+	mapV.resize (screenWidth / tileSize);
+	for (int i = 0; i < screenWidth / tileSize; i++)
+		mapV [i].resize (screenHeight / tileSize);
+
+	std::ifstream map (path);
+	if (!map) {
+		throw std::runtime_error ("NOPE");
+		return;
+	}
+	else {
+		std::string line;
+		for (int y = 0; y < screenHeight / tileSize; y++) {
+			std::getline (map, line);
+			for (size_t x = 0; x < screenWidth / tileSize; x++)
+				mapV [x] [y] = line [x];
+		}
+	}
+
+	levels.push_back (mapV);
+}
+
+void Game::loadLevel (int levelIndex) {
 	unloadLevel ();
+	std::vector < std::vector <char>> map = levels [levelIndex];
+	portalAppearDuration = levelPortalAppearDurations [levelIndex];
 
 	gameObjects.push_back (new Map (map, BG_BLACK));
 
 	for (int x = 0; x < screenWidth / tileSize; x++) {
 		for (int y = 0; y < screenHeight / tileSize; y++) {
-			if (map [x] [y] == 'F')
+			if (map [x] [y] == 'F' || map [x] [y] == 'f')
 				gameObjects.insert (gameObjects.begin (), 
-									new LaunchPad (Vector2 (x * tileSize, y * tileSize), Vector2 (tileSize, tileSize), FG_GREEN, false));
+									new Portal (Vector2 (x * tileSize, y * tileSize), Vector2 (tileSize, tileSize), FG_GREEN));
 			
-			if (map [x] [y] == 'R')
+			if (map [x] [y] == 'R' || map [x] [y] == 'r')
 				gameObjects.push_back (
 					new Player (Vector2 (3 + x * tileSize, 3 + y * tileSize), Vector2 (3, 3), FG_BLUE, true, 20)); // runner
 			
-			if (map [x] [y] == 'C')
+			if (map [x] [y] == 'C' || map [x] [y] == 'c')
 				gameObjects.push_back (
-					new Player (Vector2 (3 + x * tileSize, 3 + y * tileSize), Vector2 (3, 3), FG_RED, false, 25)); // chaser
+					new Player (Vector2 (3 + x * tileSize, 3 + y * tileSize), Vector2 (3, 3), FG_RED, false, 20)); // chaser
 			
 		}
 	}
@@ -74,7 +111,7 @@ void Game::loadLevel (std::vector < std::vector <char>> map) {
 void Game::loadNextLevel () { 
 	if (currentLevelIndex < levels.size () - 1) {
 		currentLevelIndex++;
-		loadLevel (levels [currentLevelIndex]);
+		loadLevel (currentLevelIndex);
 	}
 }
 
@@ -90,46 +127,19 @@ bool Game::OnUserCreate () {
 	game = this;
 
 	GameObject::initializeCollisionMatrix (screenWidth, screenHeight);
-	// Level 1
-	levels.push_back ({ {'0','0','0','0','0','0','0','0','0','0'},
-						{'0','0','0','0',' ',' ','0','0','C','0'},
-						{'0','0',' ',' ',' ',' ',' ','0','R','0'},
-						{'0',' ',' ','0','0','0',' ','0',' ','0'},
-						{'0',' ',' ','0','0',' ',' ','0',' ','0'},
-						{'0',' ','0','0',' ',' ',' ','0',' ','0'},
-						{'0',' ',' ','0',' ',' ','0',' ',' ','0'},
-						{'0','0',' ','0',' ','0',' ',' ','0','0'},
-						{'0',' ',' ','0',' ','0',' ','0','0','0'},
-						{'0',' ','0','0',' ','0',' ',' ','0','0'},
-						{'0',' ',' ','0',' ',' ','0',' ',' ','0'},
-						{'0','0',' ','0','0',' ',' ','0',' ','0'},
-						{'0','0',' ','0','0','0',' ',' ',' ','0'},
-						{'0','F',' ','0','0','0','0',' ','0','0'},
-						{'0','0','0','0','0','0','0','0','0','0'}, });
 
-	// Level 2
-	levels.push_back ({ {'0','0','0','0','0','0','0','0','0','0'},
-						{'0','0',' ','0',' ','0',' ','R','C','0'},
-						{'0',' ',' ',' ',' ',' ',' ','0','0','0'},
-						{'0',' ','0','0','0',' ','0','0',' ','0'},
-						{'0',' ','0','0','0','0',' ',' ',' ','0'},
-						{'0',' ','0','0',' ',' ',' ','0',' ','0'},
-						{'0',' ',' ','0',' ',' ',' ','0',' ','0'},
-						{'0','0',' ','0',' ','0','0','0',' ','0'},
-						{'0',' ',' ','0',' ','0',' ','0',' ','0'},
-						{'0',' ','0','0',' ','0',' ',' ',' ','0'},
-						{'0',' ',' ','0',' ','0',' ','0','0','0'},
-						{'0','0',' ','0',' ','0',' ','0','F','0'},
-						{'0','0',' ','0',' ','0',' ',' ',' ','0'},
-						{'0',' ',' ',' ',' ','0','0',' ','0','0'},
-						{'0','0','0','0','0','0','0','0','0','0'}, });
+	loadLevelMap ("Level 1.txt", 0);
+	loadLevelMap ("Level 2.txt", 15);
+	loadLevelMap ("Level 3.txt", 10);
+	loadLevelMap ("Level 4.txt", 15);
+	loadLevelMap ("Level 5.txt", 15);
 
 	// Load sprites
 	chaserSprite = new olcSprite (L"../CSCI221 Group Project/Sprites/Chaser.spr");
 	winsSprite = new olcSprite (L"../CSCI221 Group Project/Sprites/Wins.spr");
 	runnerSprite = new olcSprite (L"../CSCI221 Group Project/Sprites/Runner.spr");
 
-	loadLevel (levels [0]); // load first level
+	loadLevel (0); // load first level
 
 	return true;
 }
@@ -162,6 +172,11 @@ bool Game::OnUserUpdate (float deltaTime) {
 	else
 		chaserReleased = true;
 
+	if (portalAppearTimer < portalAppearDuration)
+		portalAppearTimer += deltaTime;
+	else
+		portalVisible = true;
+
 	// print Background
 	Fill (0, 0, screenWidth, screenHeight, PIXEL_SOLID, FG_CYAN);
 
@@ -178,6 +193,8 @@ void Game::reset () {
 	runnerWin = false;
 	chaserReleased = false;
 	headStartTimer = 0;
+	portalVisible = false;
+	portalAppearTimer = 0;
 }
 
 bool Game::OnUserDestroy () {

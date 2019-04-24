@@ -335,7 +335,7 @@ public:
 
 		m_bEnableSound = false;
 
-		m_sAppName = L"Run & Chase";
+		m_sAppName = L"Maze Runner";
 	}
 
 	void EnableSound()
