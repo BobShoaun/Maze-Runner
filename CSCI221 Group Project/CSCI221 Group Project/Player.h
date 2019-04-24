@@ -1,89 +1,95 @@
 #pragma once
 #include "GameObject.h"
-#include "Map.h"
-#include "Game.h"
-#include "LaunchPad.h"
 
 class Player : public GameObject {
 
 	private:
-		static int count;
+
+	float penaltyDuration = 1.0f;
+	float penaltyTimer = penaltyDuration;
+
+	float penaltySpeed = 15;
+	float normalSpeed = 20;
+	float speed = normalSpeed;
+
+	bool runner; // is runner or chaser?
 
 	public:
-	int id;
-	float speed = 20;
-	float penaltyTimer = 2;
 
-	Player (Vector2 position, Vector2 dimensions, short color)
-		: GameObject (position, dimensions, color) {
-		id = count++;
-	}
+	Player (Vector2 position, Vector2 dimensions, short color, bool r, float normalSpeed);
 
-	void onCollision (GameObject* col) {
-		
-		if (dynamic_cast<Map *> (col)) {
-			setPosition (previousPosition);
-			if (id == 0)
-				penaltyTimer = 0;
-		}
-		if (dynamic_cast<Player *> (col)) { 
-			setPosition (previousPosition); 
-			Game::engine->over = true; //lose
+	void onCollision (GameObject* col);
 
-		}
-		LaunchPad* p = dynamic_cast<LaunchPad *> (col);
-		if (p && !p->start) {
-			if (id == 0) //win
-				Game::engine->win = true;
-			else
-				setPosition (previousPosition);
-		}
-	}
-
-	void onUpdate (float deltaTime) {
-
-		if (penaltyTimer < 1.0f) {
-			speed = 15;
-			penaltyTimer += deltaTime;
-		}
-		else
-			speed = 20;
-
-		Vector2 newPos = position;
-
-		if (id == 0) {
-
-			if (Game::engine->GetKey (VK_UP).bHeld)
-				newPos.y -= speed * deltaTime;
-
-			if (Game::engine->GetKey (VK_DOWN).bHeld)
-				newPos.y += speed * deltaTime;
-
-			if (Game::engine->GetKey (VK_LEFT).bHeld)
-				newPos.x -= speed * deltaTime;
-
-			if (Game::engine->GetKey (VK_RIGHT).bHeld)
-				newPos.x += speed * deltaTime;
-		}
-		else if (Game::engine->chaserReleased) {
-
-			if (Game::engine->GetKey (87).bHeld)
-				newPos.y -= speed * deltaTime;
-
-			if (Game::engine->GetKey (83).bHeld)
-				newPos.y += speed * deltaTime;
-
-			if (Game::engine->GetKey (0x41).bHeld)
-				newPos.x -= speed * deltaTime;
-
-			if (Game::engine->GetKey (0x44).bHeld)
-				newPos.x += speed * deltaTime;
-		}
-		setPosition (newPos);
-
-		Game::engine->Fill (position.x, position.y, getEndPos ().x, getEndPos ().y, PIXEL_SOLID, color);
-	}
+	void onUpdate (float deltaTime);
 
 };
 
-int Player::count = 0;
+#include "Map.h"
+
+Player::Player (Vector2 position, Vector2 dimensions, short color, bool r, float normalSpeed)
+	: GameObject (position, dimensions, color), runner (r), normalSpeed (normalSpeed) { }
+
+void Player::onCollision (GameObject* col) {
+
+	if (dynamic_cast<Map *> (col)) {
+		setPosition (previousPosition);
+		if (runner)
+			penaltyTimer = 0;
+	}
+	if (dynamic_cast<Player *> (col)) {
+		setPosition (previousPosition);
+		Game::game->chaserWin = true; //chaser wins
+
+	}
+	LaunchPad* p = dynamic_cast<LaunchPad *> (col);
+	if (p && !p->start) {
+		if (runner) // runner wins
+			Game::game->runnerWin = true;
+		else
+			setPosition (previousPosition);
+	}
+}
+
+void Player::onUpdate (float deltaTime) {
+
+	if (penaltyTimer < penaltyDuration) {
+		speed = penaltySpeed;
+		penaltyTimer += deltaTime;
+	}
+	else
+		speed = normalSpeed;
+
+	Vector2 newPosition = position;
+
+	if (runner) {
+
+		if (Game::game->GetKey (VK_UP).bHeld)
+			newPosition.y -= speed * deltaTime;
+
+		if (Game::game->GetKey (VK_DOWN).bHeld)
+			newPosition.y += speed * deltaTime;
+
+		if (Game::game->GetKey (VK_LEFT).bHeld)
+			newPosition.x -= speed * deltaTime;
+
+		if (Game::game->GetKey (VK_RIGHT).bHeld)
+			newPosition.x += speed * deltaTime;
+	}
+	else if (Game::game->chaserReleased) {
+
+		if (Game::game->GetKey (87).bHeld) // w key
+			newPosition.y -= speed * deltaTime;
+
+		if (Game::game->GetKey (83).bHeld) // s key
+			newPosition.y += speed * deltaTime;
+
+		if (Game::game->GetKey (0x41).bHeld) // a key
+			newPosition.x -= speed * deltaTime;
+
+		if (Game::game->GetKey (0x44).bHeld) // d key
+			newPosition.x += speed * deltaTime;
+	}
+	setPosition (newPosition);
+
+	Game::game->Fill (position.x, position.y, getEndPosition ().x, getEndPosition ().y, PIXEL_SOLID, color);
+}

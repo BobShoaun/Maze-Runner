@@ -1,51 +1,41 @@
 #pragma once
-#include <iostream>
 #include "GameObject.h"
-#include "Game.h"
 
 class Map : public GameObject {
 
 	private:
-	char matrix [screenWidth / 8] [screenHeight / 8];
+	std::vector < std::vector <char>> map;
 
 	public:
-	Map (char m [screenWidth / 8] [screenHeight / 8])
-		: GameObject (Vector2::zero, Vector2::zero) { 
-		for (int x = 0; x < screenWidth / 8; x++) {
-			for (int y = 0; y < screenHeight / 8; y++) {
-				matrix [x] [y] = m [x] [y];
-			}
-		}
-		updateCollisionMatrix ();
-	}
+	Map (std::vector < std::vector <char>> map, short color);
 
-	void onReset () { 
-		updateCollisionMatrix ();
-	}
+	void onReset ();
 
-	void updateCollisionMatrix () {
-		for (int x = 0; x < screenWidth; x++) {
-			for (int y = 0; y < screenHeight; y++) {
-				
-				if (matrix [x / 8] [y / 8] == '0') {
-					
-					collisionMatrix [x] [y] = id;
-				}
-			}
-		}
-	}
+	void updateCollisionMatrix ();
 
-	void onUpdate (float deltaTime) { 
-		for (int x = 0; x < screenWidth; x++) {
-			for (int y = 0; y < screenHeight; y++) {
-			
-			
-				if (matrix [x / 8] [y / 8] == '0')
-					Game::engine->Draw (x, y, 9608, BG_BLACK);
-			}
-		}
-		
-	}
-
+	void onUpdate (float deltaTime);
 
 };
+
+Map::Map (std::vector < std::vector <char>> map, short color)
+	: GameObject (Vector2 (), Vector2 (), color), map (map) {
+	updateCollisionMatrix ();
+}
+
+void Map::onReset () {
+	updateCollisionMatrix ();
+}
+
+void Map::updateCollisionMatrix () {
+	for (int x = 0; x < screenWidth; x++)
+		for (int y = 0; y < screenHeight; y++)
+			if (map [x / tileSize] [y / tileSize] == '0')
+				collisionMatrix [x] [y] = id;
+}
+
+void Map::onUpdate (float deltaTime) {
+	for (int x = 0; x < screenWidth; x++)
+		for (int y = 0; y < screenHeight; y++)
+			if (map [x / tileSize] [y / tileSize] == '0')
+				Game::game->Draw (x, y, PIXEL_SOLID, color);
+}

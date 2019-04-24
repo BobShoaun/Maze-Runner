@@ -1,21 +1,27 @@
 #pragma once
 
 struct Vector2 {
-
 	public:
-	static Vector2 zero;
 	float x, y;
 	Vector2 ();
 	Vector2 (float, float);
-	bool operator == (const Vector2 & vector2) const {
-		return x == vector2.x && y == vector2.y;
-	}
-	bool operator != (const Vector2 & vector2) const {
-		return !(*this == vector2);
-	}
-
-	Vector2 operator + (const Vector2 & vector2) const {
-		return Vector2 (this->x + vector2.x, this->y + vector2.y);
-	}
-
+	bool operator == (const Vector2 & other) const;
+	bool operator != (const Vector2 &) const;
+	Vector2 operator + (const Vector2 &) const;
 };
+
+Vector2::Vector2 () : x (0), y (0) { }
+
+Vector2::Vector2 (float x, float y) : x (x), y (y) { }
+
+bool Vector2::operator == (const Vector2 & other) const {
+	return x == other.x && y == other.y;
+}
+
+bool Vector2::operator != (const Vector2 & other) const {
+	return !(*this == other);
+}
+
+Vector2 Vector2::operator + (const Vector2 & other) const {
+	return Vector2 (this->x + other.x, this->y + other.y);
+}

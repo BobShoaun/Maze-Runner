@@ -116,11 +116,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
-    <ClCompile Include="Vector2.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GameObject.h" />
-    <ClInclude Include="Globals.h" />
     <ClInclude Include="LaunchPad.h" />
     <ClInclude Include="Map.h" />
     <ClInclude Include="olcConsoleGameEngine.h" />
